@@ -1,14 +1,10 @@
 name: assignment-test
-<<<<<<< HEAD
-on: [push]
-=======
 on:
     push:
         tags-ignore:
             - '*'
         branches:
             - '*'
->>>>>>> assignments-base/assignment2
 jobs:
     unit-test:
         container: cuaesd/aesd-autotest:24-unit-test
@@ -20,11 +16,7 @@ jobs:
           - name: Run unit test
             run: ./unit-test.sh
     full-test:
-<<<<<<< HEAD
-        container: cuaesd/aesd-autotest:assignment2
-=======
         container: cuaesd/aesd-autotest:24-assignment2
->>>>>>> assignments-base/assignment2
         runs-on: self-hosted
         steps:
           - uses: actions/checkout@v2
