@@ -1,8 +1,8 @@
 assignment-autotest/CMakeFiles/assignment-autotest.dir/test/assignment1/Test_assignment_validate_Runner.c.o: \
- /home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-autotest/test/assignment1/Test_assignment_validate_Runner.c \
+ /home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-3-part-1/assignment-autotest/test/assignment1/Test_assignment_validate_Runner.c \
  /usr/include/stdc-predef.h \
- /home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-autotest/Unity/src/unity.h \
- /home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-autotest/Unity/src/unity_internals.h \
+ /home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-3-part-1/assignment-autotest/Unity/src/unity.h \
+ /home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-3-part-1/assignment-autotest/Unity/src/unity_internals.h \
  /usr/include/setjmp.h /usr/include/features.h \
  /usr/include/features-time64.h \
  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
@@ -49,5 +49,5 @@ assignment-autotest/CMakeFiles/assignment-autotest.dir/test/assignment1/Test_ass
  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
- /home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-autotest/./examples/autotest-validate/autotest-validate.h \
+ /home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-3-part-1/assignment-autotest/./examples/autotest-validate/autotest-validate.h \
  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdbool.h

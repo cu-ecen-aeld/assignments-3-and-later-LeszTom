@@ -1,4 +1,4 @@
-# Install script for directory: /home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-autotest/Unity
+# Install script for directory: /home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-3-part-1/assignment-autotest/Unity
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -43,14 +43,14 @@ if(NOT DEFINED CMAKE_OBJDUMP)
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/src" TYPE DIRECTORY FILES "/home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-autotest/Unity/src/")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/src" TYPE DIRECTORY FILES "/home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-3-part-1/assignment-autotest/Unity/src/")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/share/unityConfig/cmake/unityConfig.cmake")
     file(DIFFERENT EXPORT_FILE_CHANGED FILES
          "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/share/unityConfig/cmake/unityConfig.cmake"
-         "/home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/build/assignment-autotest/Unity/CMakeFiles/Export/share/unityConfig/cmake/unityConfig.cmake")
+         "/home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-3-part-1/build/assignment-autotest/Unity/CMakeFiles/Export/share/unityConfig/cmake/unityConfig.cmake")
     if(EXPORT_FILE_CHANGED)
       file(GLOB OLD_CONFIG_FILES "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/share/unityConfig/cmake/unityConfig-*.cmake")
       if(OLD_CONFIG_FILES)
@@ -59,15 +59,15 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
       endif()
     endif()
   endif()
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/unityConfig/cmake" TYPE FILE FILES "/home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/build/assignment-autotest/Unity/CMakeFiles/Export/share/unityConfig/cmake/unityConfig.cmake")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/unityConfig/cmake" TYPE FILE FILES "/home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-3-part-1/build/assignment-autotest/Unity/CMakeFiles/Export/share/unityConfig/cmake/unityConfig.cmake")
   if("${CMAKE_INSTALL_CONFIG_NAME}" MATCHES "^()$")
-    file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/unityConfig/cmake" TYPE FILE FILES "/home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/build/assignment-autotest/Unity/CMakeFiles/Export/share/unityConfig/cmake/unityConfig-noconfig.cmake")
+    file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/unityConfig/cmake" TYPE FILE FILES "/home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-3-part-1/build/assignment-autotest/Unity/CMakeFiles/Export/share/unityConfig/cmake/unityConfig-noconfig.cmake")
   endif()
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/build/assignment-autotest/Unity/src/cmake_install.cmake")
+  include("/home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-3-part-1/build/assignment-autotest/Unity/src/cmake_install.cmake")
 
 endif()
 

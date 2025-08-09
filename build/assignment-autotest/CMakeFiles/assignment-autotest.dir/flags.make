@@ -4,7 +4,7 @@
 # compile C with /usr/bin/cc
 C_DEFINES = 
 
-C_INCLUDES = -I/home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-autotest/Unity/src -I/home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-autotest/. -I/home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-autotest/..
+C_INCLUDES = -I/home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-3-part-1/assignment-autotest/Unity/src -I/home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-3-part-1/assignment-autotest/. -I/home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-3-part-1/assignment-autotest/..
 
 C_FLAGS =  -Wall -Werror -g
 

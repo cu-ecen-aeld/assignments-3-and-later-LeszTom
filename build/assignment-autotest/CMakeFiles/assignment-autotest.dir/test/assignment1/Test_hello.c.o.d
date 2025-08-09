@@ -1,8 +1,8 @@
 assignment-autotest/CMakeFiles/assignment-autotest.dir/test/assignment1/Test_hello.c.o: \
- /home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-autotest/test/assignment1/Test_hello.c \
+ /home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-3-part-1/assignment-autotest/test/assignment1/Test_hello.c \
  /usr/include/stdc-predef.h \
- /home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-autotest/Unity/src/unity.h \
- /home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-autotest/Unity/src/unity_internals.h \
+ /home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-3-part-1/assignment-autotest/Unity/src/unity.h \
+ /home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-3-part-1/assignment-autotest/Unity/src/unity_internals.h \
  /usr/include/setjmp.h /usr/include/features.h \
  /usr/include/features-time64.h \
  /usr/include/x86_64-linux-gnu/bits/wordsize.h \

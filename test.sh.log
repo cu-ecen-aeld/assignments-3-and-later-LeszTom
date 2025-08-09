@@ -110,3 +110,49 @@ Writing 10 files containing string AELD_IS_FUN to /tmp/aeld-data/0IhEDp7lKxZoPq8
 The number of files are 10 and the number of matching lines are 10
 success
 Test of assignment assignment1 complete with success
+Running test with user ltomaszewski
+CMake Error: The current CMakeCache.txt directory /home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-2/build/CMakeCache.txt is different than the directory /home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/build where CMakeCache.txt was created. This may result in binaries being created in the wrong place. If you are not sure, reedit the CMakeCache.txt
+CMake Error: The source "/home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-2/CMakeLists.txt" does not match the source "/home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/CMakeLists.txt" used to generate cache.  Re-run cmake with a different source directory.
+/bin/sh: 1: cd: can't cd to /home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/build/assignment-autotest
+make[2]: *** [assignment-autotest/CMakeFiles/assignment-autotest.dir/build.make:232: assignment-autotest/CMakeFiles/assignment-autotest.dir/clean] Error 2
+make[1]: *** [CMakeFiles/Makefile2:147: assignment-autotest/CMakeFiles/assignment-autotest.dir/clean] Error 2
+make: *** [Makefile:142: clean] Error 2
+CMake Error: The source directory "/home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot" does not appear to contain CMakeLists.txt.
+Specify --help for usage, or press the help button on the CMake GUI.
+make: *** [Makefile:215: cmake_check_build_system] Error 1
+/home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-autotest/test/assignment1/Test_hello.c:6:test_hello:INFO: Hello!  Your unity setup is working!
+/home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-autotest/test/assignment1/Test_hello.c:4:test_hello:PASS
+
+-----------------------
+1 Tests 0 Failures 0 Ignored 
+OK
+/home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-autotest/test/assignment1/Test_assignment_validate.c:9:test_assignment_validate:PASS
+
+-----------------------
+1 Tests 0 Failures 0 Ignored 
+OK
+Read LeszTom from conf/username.txt
+/home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-autotest/../student-test/assignment1/Test_validate_username.c:15:test_validate_my_username:PASS
+
+-----------------------
+1 Tests 0 Failures 0 Ignored 
+OK
+Executing assignment test script
+~/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-2/assignment-autotest/test/assignment2 ~/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-2
+~/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-2/finder-app ~/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-2/assignment-autotest/test/assignment2 ~/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-2
+rm -f writer *.o
+gcc writer.c -o writer
+file or text is missing
+file or text is missing
+Performing make clean
+rm -f writer *.o
+Using default value AELD_IS_FUN for string to write
+Using default value 10 for number of files to write
+Writing 10 files containing string AELD_IS_FUN to /tmp/aeld-data
+/tmp/aeld-data created
+Removing the old writer utility and compiling as a native application
+rm -f writer *.o
+gcc writer.c -o writer
+The number of files are 10 and the number of matching lines are 10
+success
+Test of assignment assignment2 complete with success

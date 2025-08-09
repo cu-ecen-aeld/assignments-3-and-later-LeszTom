@@ -8,7 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-autotest/Unity/src/unity.c" "assignment-autotest/Unity/src/CMakeFiles/unity.dir/unity.c.o" "gcc" "assignment-autotest/Unity/src/CMakeFiles/unity.dir/unity.c.o.d"
+  "/home/ltomaszewski/Work_Place/Coursera/Linux_System_Programming_and_Introduction_to_Buildroot/assignment-3-part-1/assignment-autotest/Unity/src/unity.c" "assignment-autotest/Unity/src/CMakeFiles/unity.dir/unity.c.o" "gcc" "assignment-autotest/Unity/src/CMakeFiles/unity.dir/unity.c.o.d"
   )
 
 # Targets to which this target links.
