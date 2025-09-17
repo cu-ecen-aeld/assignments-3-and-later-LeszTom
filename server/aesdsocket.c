@@ -3,17 +3,13 @@
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
-#include <sys/types.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
 #include <netdb.h>
 #include <arpa/inet.h>
-#include <sys/wait.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <syslog.h>
 #include <fcntl.h>
-#include <signal.h>
 
 #define PORT "9000"
 #define BACKLOG 10
@@ -29,7 +25,6 @@ void perror_d(const char* error){
 
 static void signal_handler(){
     ON=false;
-    printf("\nsignal_handler called\n");
 }
 
 int read_line(int file_descriptoresc,char *line,int max_len,off_t offset){
@@ -108,7 +103,6 @@ int main(int argc, char* argv[]){
 
     int process_id;
     if(deamon){
-        printf("running as a deamon\n");
         process_id = fork (); //create child proccess
         if(process_id == -1){
             perror("run as a deamon failed:");

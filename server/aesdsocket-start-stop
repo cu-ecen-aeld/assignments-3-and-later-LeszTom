@@ -1,0 +1,31 @@
+#!/bin/bash
+
+DIR=$(dirname $0)
+if [[ "$DIR" == "/etc/init.d" ]]; then
+    AESDSOC_PATH="/usr/bin"
+else
+    AESDSOC_PATH=$(pwd)
+fi
+
+PIDFILE=AESDSOC_PATH/aesdsocket.pid
+
+case "$1" in
+    start)
+        echo "Starting aesdsocket: "
+        start-stop-daemon -q --start --name aesdsocket --startas $AESDSOC_PATH/aesdsocket -- -d
+        ;;
+   stop) 
+        echo "Stopping aesdsocket: "
+        start-stop-daemon -q --stop --name aesdsocket
+        ;;
+   restart)
+        echo "Stopping aesdsocket: "
+        start-stop-daemon -q --stop --name aesdsocket
+        echo "Starting aesdsocket: "
+        start-stop-daemon -q --start --name aesdsocket --startas $AESDSOC_PATH/aesdsocket -- -d
+        ;;
+        *)
+        echo "Usage: /etc/init.d/aesdsocket start|stop|restart"
+        exit 1
+        ;;
+esac
