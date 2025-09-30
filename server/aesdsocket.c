@@ -35,7 +35,7 @@ void perror_d(const char* error){
 void printf_d(const char* str, ...){
     va_list args;
     if(!deamon && verbose){
-        printf(str,args);
+        printf_d(str,args);
     }
 }
 
@@ -72,6 +72,7 @@ void* time_update(void *lock){
 
             printf_d("%s", time_str);
         }
+        usleep(1000);
     }
     return NULL;
 }
@@ -266,6 +267,8 @@ int main(int argc, char* argv[]){
     Thread_Data* td=NULL;
     Thread_Data* td_tmp=NULL;
 
+    printf_d("DEBUG 1\n");
+
     while(ON){
         td=(Thread_Data *) malloc(sizeof(Thread_Data));
         td->active=true;
@@ -279,8 +282,12 @@ int main(int argc, char* argv[]){
         socklen_t remote_addr_size = sizeof (struct sockaddr_in);
 
         printf_d("wait for socket accept\n");
-        while((td->connection_descriptor = accept(socket_descriptor,(struct sockaddr *)&(remote_addr),&remote_addr_size))==-1 && ON)
+
+        while(ON){
+            td->connection_descriptor = accept(socket_descriptor,(struct sockaddr *)&(remote_addr),&remote_addr_size);
+            if(td->connection_descriptor != -1) break;
             usleep(1000);
+        }
     
         if(!ON){
             if(close(td->connection_descriptor)==-1)
