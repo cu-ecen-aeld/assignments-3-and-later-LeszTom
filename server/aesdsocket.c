@@ -35,7 +35,7 @@ void perror_d(const char* error){
 void printf_d(const char* str, ...){
     va_list args;
     if(!deamon && verbose){
-        printf_d(str,args);
+        printf(str,args);
     }
 }
 
