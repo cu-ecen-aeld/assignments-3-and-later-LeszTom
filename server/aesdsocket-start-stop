@@ -1,11 +1,11 @@
 #!/bin/bash
 
-DIR=$(pwd)
-if [[ "$DIR" == "/etc/init.d" ]]; then
+#DIR=$(pwd)
+#if [[ "$DIR" == "/etc/init.d" ]]; then
     AESDSOC_PATH="/usr/bin"
-else
-    AESDSOC_PATH=$(pwd)
-fi
+#else
+#    AESDSOC_PATH=$(pwd)
+#fi
 
 PIDFILE=AESDSOC_PATH/aesdsocket.pid
 

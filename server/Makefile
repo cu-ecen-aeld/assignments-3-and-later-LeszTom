@@ -4,7 +4,7 @@ TARGET ?= aesdsocket
 LDFLAGS ?= -lpthread -lrt
 
 aesdsocket: aesdsocket.c
-	$(CC) $(CFLAGS) aesdsocket.c -o $(LDFLAGS) $(TARGET)
+	$(CC) $(CFLAGS) aesdsocket.c $(LDFLAGS) -o  $(TARGET)
 
 .PHONY:all
 all: aesdsocket
