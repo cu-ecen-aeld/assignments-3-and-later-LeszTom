@@ -215,39 +215,17 @@ void aesd_cleanup_module(void)
 
     cdev_del(&aesd_device.cdev);
 
-    /**
-     * TODO: cleanup AESD specific poritions here as necessary
-     */
-
-     /*
-      * Example usage:
- * uint8_t index;
- * struct aesd_circular_buffer buffer;
- * struct aesd_buffer_entry *entry;
- * AESD_CIRCULAR_BUFFER_FOREACH(entry,&buffer,index) {
- *      free(entry->buffptr);
- * }*/
-
     uint8_t index;
     struct aesd_buffer_entry *entry;
     
-
     AESD_CIRCULAR_BUFFER_FOREACH(entry,&(aesd_device.cirular_buffer),index) {
         kfree(entry->buffptr);
         entry->buffptr = NULL;
         entry->size = 0;
     }
 
-//    kfree(aesd_device.temp_buffer);
-//    aesd_device.temp_size=0;
-//    aesd_device.flag_e=1;
-//    aesd_device.flag_t=0;
-
-    /*********************************************** */
     unregister_chrdev_region(devno, 1);
 }
-
-
 
 module_init(aesd_init_module);
 module_exit(aesd_cleanup_module);

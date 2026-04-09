@@ -29,7 +29,6 @@ struct aesd_buffer_entry
      * Number of bytes stored in buffptr
      */
     size_t size;
-//    bool terminated;
 };
 
 struct aesd_circular_buffer
@@ -57,12 +56,6 @@ extern struct aesd_buffer_entry *aesd_circular_buffer_find_entry_offset_for_fpos
             size_t char_offset, size_t *entry_offset_byte_rtn );
 
 extern void aesd_circular_buffer_add_entry(struct aesd_circular_buffer *buffer, const struct aesd_buffer_entry *add_entry);
-
-extern struct aesd_buffer_entry *aesd_circular_buffer_get_entry(struct aesd_circular_buffer *buffer);
-
-extern struct aesd_buffer_entry *aesd_circular_buffer_add_entry_overload(struct aesd_circular_buffer *buffer, const struct aesd_buffer_entry *add_entry);
-
-extern struct aesd_buffer_entry *aesd_circular_buffer_get_last_entry(struct aesd_circular_buffer *buffer);
 
 extern void aesd_circular_buffer_init(struct aesd_circular_buffer *buffer);
 
