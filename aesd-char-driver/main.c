@@ -54,8 +54,7 @@ ssize_t aesd_read(struct file *filp, char __user *buf, size_t count,
     ssize_t retval = 0;
     ssize_t rest = 0;
     
-    struct aesd_dev *dev;
-    dev = (struct aesd_dev*)filp->private_data;
+    struct aesd_dev *dev = (struct aesd_dev*)filp->private_data;
 
     if(dev->eof)
         return 0;
@@ -68,19 +67,25 @@ ssize_t aesd_read(struct file *filp, char __user *buf, size_t count,
     struct aesd_buffer_entry* entry;
     size_t read_count = 0;
 
-    for(int i=0; i<AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED; i++){
+    uint8_t iterations;
+    if (dev->cirular_buffer.full){
+        iterations = AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED;
+    }else{
+        iterations=dev->cirular_buffer.in_offs;
+    }
+    
+    for(int i=0; i<iterations; i++){
 
-        if (dev->cirular_buffer.entry[dev->cirular_buffer.out_offs].buffptr == NULL)
-            break;
+//        if (dev->cirular_buffer.entry[dev->cirular_buffer.out_offs].buffptr == NULL)
+//            break;
 
         entry = &(dev->cirular_buffer.entry[dev->cirular_buffer.out_offs]);
 
         rest = copy_to_user(buf + read_count, entry->buffptr, entry->size);
         read_count = read_count + entry->size - rest;
 
-        dev->cirular_buffer.out_offs++;
-        dev->cirular_buffer.out_offs = dev->cirular_buffer.out_offs % (AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED);
-
+//        dev->cirular_buffer.out_offs++;
+        dev->cirular_buffer.out_offs = ++dev->cirular_buffer.out_offs % (AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED);
     }
 
     dev->eof=true;
@@ -111,8 +116,8 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
         entry->buffptr = NULL;
         entry->size=0;
         if (dev->cirular_buffer.full && dev->cirular_buffer.out_offs == dev->cirular_buffer.in_offs)
-            dev->cirular_buffer.out_offs++;
-            dev->cirular_buffer.out_offs = dev->cirular_buffer.out_offs % (AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED);
+//            dev->cirular_buffer.out_offs++;
+            dev->cirular_buffer.out_offs = ++dev->cirular_buffer.out_offs % (AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED);
     }
 
     if(entry->size + count > MAXDATASIZE){
