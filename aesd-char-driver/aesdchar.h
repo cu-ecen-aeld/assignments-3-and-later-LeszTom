@@ -23,13 +23,24 @@
 #  define PDEBUG(fmt, args...) /* not debugging: nothing */
 #endif
 
+#include "aesd-circular-buffer.h"
+
 struct aesd_dev
 {
     /**
      * TODO: Add structure(s) and locks needed to complete assignment requirements
      */
-    struct cdev cdev;     /* Char device structure      */
+    struct aesd_circular_buffer cirular_buffer; //buffer
+//    char *temp_buffer;        // temoprary buffer for not terminated strings
+//    bool flag_t;              //flag indicating temp_buffer contains terminated string
+//    bool flag_e;              //flag indicationg temp_buffer is empty
+//    bool full_last_entry;     //flag indicating the last write string contained termination sign \n
+//    size_t temp_size;
+    bool eof;
+    struct mutex lock;
+    struct cdev cdev;         /* Char device structure      */
 };
 
+void aesd_device_status(struct aesd_dev *device);
 
 #endif /* AESD_CHAR_DRIVER_AESDCHAR_H_ */
