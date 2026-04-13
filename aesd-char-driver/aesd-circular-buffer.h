@@ -17,7 +17,7 @@
 #endif
 
 #define AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED 10
-#define MAXDATASIZE 20000
+#define MAXDATASIZE 30000
 
 struct aesd_buffer_entry
 {
