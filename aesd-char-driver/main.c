@@ -47,7 +47,6 @@ int aesd_release(struct inode *inode, struct file *filp)
 
 ssize_t aesd_read(struct file *filp, char __user *buf, size_t count, loff_t *f_pos)
 {
-//    PDEBUG("Read %zu bytes with offset %lld",count,*f_pos);
     ssize_t retval = 0;
     ssize_t rest = 0;
     ssize_t read_count = 0;
@@ -74,17 +73,10 @@ ssize_t aesd_read(struct file *filp, char __user *buf, size_t count, loff_t *f_p
     uint8_t out_offs=dev->cirular_buffer.out_offs;
 
     for(int i=0; i<iterations; i++){
-        
         entry = &(dev->cirular_buffer.entry[dev->cirular_buffer.out_offs]);
 
-        if(entry->buffptr == NULL){
-            dev->eof=true;
+        if(entry->buffptr == NULL || dev->eof)
             break;
-        } 
-
-        if(dev->eof){
-            break;
-        }
 
         rest = copy_to_user(buf + read_count, entry->buffptr, entry->size);
 
@@ -164,9 +156,8 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,loff_
         dev->cirular_buffer.in_offs = dev->cirular_buffer.in_offs % (AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED);
     }
 
-    if (rest) {
+    if (rest)
         PDEBUG("Not all date writen. Writen %zu bytes, expected %zu",count-rest,count);
-    }
 
     mutex_unlock(&dev->lock);
     PDEBUG("Written %s, in_offs = %zu out_offs = %zu rest=%zu",entry->buffptr,dev->cirular_buffer.in_offs,dev->cirular_buffer.out_offs,rest);
@@ -175,20 +166,6 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,loff_
     error:
         mutex_unlock(&dev->lock);
         return -ENOMEM;
-}
-
-void aesd_device_status(struct aesd_dev *device){
-
-    uint8_t in_offs = device->cirular_buffer.in_offs;
-    uint8_t out_offs = device->cirular_buffer.out_offs;
-    bool full = device->cirular_buffer.full;
-    printk("in_offs = %d\nout_offs = %d\nfull = %d\n",in_offs,out_offs,full);
-
-    for(int i=0; i<AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED; i++){
-        printk("index = %d\nsize = %zu",i,device->cirular_buffer.entry[i].size);
-        if (device->cirular_buffer.entry[i].buffptr)
-            printk("content: %s",device->cirular_buffer.entry[i].buffptr);
-    }
 }
 
 struct file_operations aesd_fops = {
@@ -201,7 +178,7 @@ struct file_operations aesd_fops = {
 
 static int aesd_setup_cdev(struct aesd_dev *dev)
 {
-    printk("aesd_setup_cdev");
+    PDEBUG("aesd_setup_cdev");
     int err, devno = MKDEV(aesd_major, aesd_minor);
 
     cdev_init(&dev->cdev, &aesd_fops);
@@ -209,21 +186,20 @@ static int aesd_setup_cdev(struct aesd_dev *dev)
     dev->cdev.ops = &aesd_fops;
     err = cdev_add (&dev->cdev, devno, 1);
     if (err) {
-        printk(KERN_ERR "Error %d adding aesd cdev", err);
+        PDEBUG(KERN_ERR "Error %d adding aesd cdev", err);
     }
     return err;
 }
 
 int aesd_init_module(void)
 {
-    printk("aesd_init_module");
-    PDEBUG("Module init");
+    PDEBUG("aesd_init_module");
     dev_t dev = 0;
     int result;
     result = alloc_chrdev_region(&dev, aesd_minor, 1, "aesdchar");
     aesd_major = MAJOR(dev);
     if (result < 0) {
-        printk(KERN_WARNING "Can't get major %d\n", aesd_major);
+        PDEBUG(KERN_WARNING "Can't get major %d\n", aesd_major);
         return result;
     }
     memset(&aesd_device,0,sizeof(struct aesd_dev));
@@ -241,7 +217,7 @@ int aesd_init_module(void)
 
 void aesd_cleanup_module(void)
 {
-    printk("aesd_cleanup_module");
+    PDEBUG("aesd_cleanup_module");
     dev_t devno = MKDEV(aesd_major, aesd_minor);
 
     cdev_del(&aesd_device.cdev);
