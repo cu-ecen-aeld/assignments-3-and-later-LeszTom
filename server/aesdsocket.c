@@ -111,6 +111,9 @@ void* read_send_server_loop(void *thread_param2){
     ssize_t numbytes=0;  
     char *buffer = malloc(sizeof(char)* MAXDATASIZE);
 
+    //int file_des = open(FILENAME, O_RDWR | O_TRUNC | O_CREAT | O_APPEND, 0644);
+    int file_des = open(FILENAME, O_RDWR | O_CREAT | O_APPEND, 0644);
+
     printf_d("receiving data\n");
     while(ON){
         // reveive data from client 
@@ -137,13 +140,13 @@ void* read_send_server_loop(void *thread_param2){
         }
 
         //write data to file
-        if(file_descriptor!=-1){
+        if(file_des!=-1){
             printf_d("received and writing to file: %s|size=%zd\n",buffer,numbytes);
 
             if (pthread_mutex_lock(td->mutex) != 0)
                 perror_d("pthread_mutex_lock");
 
-            if(write(file_descriptor, buffer,numbytes)<0)
+            if(write(file_des, buffer,numbytes)<0)
                 perror_d("writing data to file");
             previous_data_length=numbytes;
 
@@ -163,13 +166,15 @@ printf_d("Last sign = %d\n",buffer[numbytes-1]);
 //    off_t offset=0;
     ssize_t buf_len=0;
     int i=0;
+    memset(buffer,0,MAXDATASIZE);
+    lseek(file_des, 0, SEEK_SET);
 
     while(ON){
         if (pthread_mutex_lock(td->mutex) != 0)
             perror_d("pthread_mutex_lock");
 
 //        line_length=read_line(buffer,MAXDATASIZE,offset);
-        buf_len=read(file_descriptor,buffer,MAXDATASIZE);
+        buf_len=read(file_des,buffer,MAXDATASIZE);
 
         printf_d("Read from file i=%d\n%s|len=%zu\n",i,buffer,buf_len);
         i++;
@@ -196,7 +201,7 @@ printf_d("Last sign = %d\n",buffer[numbytes-1]);
         
         
     }
-
+    close(file_des);
     free(buffer);
     td->active=false;
     return td;
@@ -264,11 +269,11 @@ int main(int argc, char* argv[]){
         return 1;
     }
 
-    file_descriptor = open(FILENAME, O_RDWR | O_TRUNC | O_CREAT | O_APPEND, 0644);
-    if(file_descriptor==-1){
-        perror_d("file open");
-        return 1;
-    }
+//    file_descriptor = open(FILENAME, O_RDWR | O_TRUNC | O_CREAT | O_APPEND, 0644);
+//    if(file_descriptor==-1){
+//        perror_d("file open");
+//        return 1;
+//    }
 
     pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
     pthread_mutex_init(&mutex, NULL);
@@ -334,7 +339,7 @@ int main(int argc, char* argv[]){
 
 //    pthread_join(time_thread,NULL);
 
-    close(file_descriptor);
+//    close(file_descriptor);
     REMOVE_FILE(FILENAME);
     if(close(socket_descriptor)==-1)
         perror_d("close socket_descriptor");
