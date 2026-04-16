@@ -42,9 +42,6 @@ int aesd_open(struct inode *inode, struct file *filp)
 int aesd_release(struct inode *inode, struct file *filp)
 {
     PDEBUG("aesd device release");
-
-//    filp->private_data = NULL;
-
     return 0;
 }
 
@@ -58,9 +55,6 @@ ssize_t aesd_read(struct file *filp, char __user *buf, size_t count, loff_t *f_p
 
     struct aesd_dev *dev = (struct aesd_dev*)filp->private_data;
 
-//    if(dev->cirular_buffer.entry[dev->cirular_buffer.out_offs].buffptr == NULL ){
-//        goto empty;
-//    }
     if(dev->eof)
         return 0;
 
@@ -70,54 +64,29 @@ ssize_t aesd_read(struct file *filp, char __user *buf, size_t count, loff_t *f_p
         return -ERESTARTSYS;
     }
 
-//    if(dev->cirular_buffer.entry[dev->cirular_buffer.out_offs].buffptr == NULL ){
-//        goto empty;
-//    }
-
     uint8_t iterations;
     if (dev->cirular_buffer.full){
         iterations = AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED;
-//        if(dev->cirular_buffer.in_offs == 0)
-//            dev->cirular_buffer.out_offs = AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED -1;
-//        else
-//            dev->cirular_buffer.out_offs = dev->cirular_buffer.in_offs -1;
     }else{
         iterations=dev->cirular_buffer.in_offs;
         dev->cirular_buffer.out_offs=0;
     }
     uint8_t out_offs=dev->cirular_buffer.out_offs;
-//PDEBUG("Debug 1");
-    PDEBUG("Read iteratoions %d, full %d",iterations,dev->cirular_buffer.full);
-    int i = 0;
-    for(; i<iterations; i++){
-//    for(int i = dev->cirular_buffer.out_offs; i < dev->cirular_buffer.in_offs; i++)
-        PDEBUG("Read iteration: %d",i);
+
+    for(int i=0; i<iterations; i++){
         
         entry = &(dev->cirular_buffer.entry[dev->cirular_buffer.out_offs]);
-//        out_offs = (dev->cirular_buffer.out_offs + i) % AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED;
-//        entry = &(dev->cirular_buffer.entry[out_offs]);
-//        entry = &(dev->cirular_buffer.entry[i]);
-//        PDEBUG("Read %s, in_offs = %zu out_offs = %zu eof = %d",entry->buffptr,dev->cirular_buffer.in_offs,dev->cirular_buffer.out_offs,dev->eof);
+
         if(entry->buffptr == NULL){
             dev->eof=true;
             break;
-//            goto empty;
         } 
 
         if(dev->eof){
             break;
         }
 
-
-//        PDEBUG("Reading from: out_offs = %zu in_offs = %zu",dev->cirular_buffer.out_offs,dev->cirular_buffer.in_offs);
-        PDEBUG("Reading from: out_offs = %zu in_offs = %zu",out_offs,dev->cirular_buffer.in_offs);
-//        if (count >= read_count + entry->size ){
-            rest = copy_to_user(buf + read_count, entry->buffptr, entry->size);
-//        }else{
-//            rest = copy_to_user(buf + read_count, entry->buffptr, count - read_count);
-//        }
-//PDEBUG("Debug 2");
-        
+        rest = copy_to_user(buf + read_count, entry->buffptr, entry->size);
 
         if (rest) {
             PDEBUG("Not all date read. read %zu bytes, expected %zu",entry->size-rest,count);
@@ -126,30 +95,13 @@ ssize_t aesd_read(struct file *filp, char __user *buf, size_t count, loff_t *f_p
         read_count = read_count + entry->size - rest;
         dev->cirular_buffer.out_offs++;
         dev->cirular_buffer.out_offs = dev->cirular_buffer.out_offs % (AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED);
-//        out_offs++;
-//        out_offs = out_offs % (AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED);
-//        *f_pos += read_count;
         PDEBUG("Read %s, in_offs = %zu out_offs = %zu",entry->buffptr,dev->cirular_buffer.in_offs,out_offs);
     }
-PDEBUG("Debug 3");    
-    
-    PDEBUG("Total read bytes = %zu",read_count);
 
-    if (dev->cirular_buffer.full){
-//         dev->cirular_buffer.out_offs++;
-//        dev->cirular_buffer.out_offs = dev->cirular_buffer.out_offs % (AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED);
-    }
-    
     dev->eof=true;
     retval = read_count;
-//    read_count = 0;
-    if(read_count > 0){
-//        dev->cirular_buffer.out_offs++;
-//        dev->cirular_buffer.out_offs = dev->cirular_buffer.out_offs % (AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED);
-    }
     mutex_unlock(&dev->lock);
 
-    
     return read_count;
 
     empty:
@@ -159,12 +111,8 @@ PDEBUG("Debug 3");
         return 0;
 }
 
-ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
-                loff_t *f_pos)
+ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,loff_t *f_pos)
 {
-//    PDEBUG("write %zu bytes with offset %lld",count,*f_pos);
-//    ssize_t retval = -ENOMEM;
-
     struct aesd_dev *dev;
     dev = (struct aesd_dev*)filp->private_data;
 
@@ -208,19 +156,12 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
     if(count - rest > 0)
         dev->eof=false;
 
-    
-  
     if(entry->buffptr[entry->size-1] == '\n'){
         dev->cirular_buffer.in_offs++;
-//        if (abs(dev->cirular_buffer.in_offs - dev->cirular_buffer.out_offs) == AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED)
         if (dev->cirular_buffer.in_offs == AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED)
             dev->cirular_buffer.full = true;
 
         dev->cirular_buffer.in_offs = dev->cirular_buffer.in_offs % (AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED);
-
-//        if ( dev->cirular_buffer.full &&  dev->cirular_buffer.out_offs > dev->cirular_buffer.in_offs){
-//            dev->cirular_buffer.out_offs=dev->cirular_buffer.in_offs;
-//        }
     }
 
     if (rest) {
