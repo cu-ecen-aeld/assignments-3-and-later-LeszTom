@@ -111,7 +111,6 @@ void* read_send_server_loop(void *thread_param2){
     ssize_t numbytes=0;  
     char *buffer = malloc(sizeof(char)* MAXDATASIZE);
 
-    //int file_des = open(FILENAME, O_RDWR | O_TRUNC | O_CREAT | O_APPEND, 0644);
     int file_des = open(FILENAME, O_RDWR | O_CREAT | O_APPEND, 0644);
 
     printf_d("receiving data\n");
@@ -134,10 +133,8 @@ void* read_send_server_loop(void *thread_param2){
 
         buffer[numbytes]='\0';
 
-        if(previous_data_length>numbytes){
+        if(previous_data_length>numbytes)
             printf_d("numbytes=%d < previous_data_len=%d file position moved to 0\n",numbytes,previous_data_length);
-           // ftruncate(file_descriptor,0);
-        }
 
         //write data to file
         if(file_des!=-1){
@@ -153,9 +150,7 @@ void* read_send_server_loop(void *thread_param2){
             if(pthread_mutex_unlock(td->mutex)!=0)
                 perror_d("pthread_mutex_lock");
         }
-
-
-printf_d("Last sign = %d\n",buffer[numbytes-1]);        
+      
         if(buffer[numbytes-1]=='\n'){
             printf_d("remote host finished sending a data\n");
             break;
@@ -163,9 +158,7 @@ printf_d("Last sign = %d\n",buffer[numbytes-1]);
     }
 
     // read entire content from file line by line and send back to the client
-//    off_t offset=0;
     ssize_t buf_len=0;
-    int i=0;
     memset(buffer,0,MAXDATASIZE);
     lseek(file_des, 0, SEEK_SET);
 
@@ -173,21 +166,12 @@ printf_d("Last sign = %d\n",buffer[numbytes-1]);
         if (pthread_mutex_lock(td->mutex) != 0)
             perror_d("pthread_mutex_lock");
 
-//        line_length=read_line(buffer,MAXDATASIZE,offset);
         buf_len=read(file_des,buffer,MAXDATASIZE);
-
-        printf_d("Read from file i=%d\n%s|len=%zu\n",i,buffer,buf_len);
-        i++;
 
         if(pthread_mutex_unlock(td->mutex)!=0)
             perror_d("pthread_mutex_lock");
 
-
-
         printf_d("data to sent back: %s|buf_len=%d\n",buffer,buf_len);
-
-
-//        offset +=(off_t)line_length;
 
         if(buf_len > 0 ){
             printf_d("sending: %s|len=%d\n",buffer,buf_len);
@@ -197,10 +181,8 @@ printf_d("Last sign = %d\n",buffer[numbytes-1]);
             printf_d("Read len %zd. No data sent\n",buf_len);
             break;
         }
-            
-        
-        
     }
+
     close(file_des);
     free(buffer);
     td->active=false;
@@ -219,7 +201,6 @@ int main(int argc, char* argv[]){
         }
     }
 
-    //printf("Using device: %s\nUSE_AESD_CHAR_DEVICE: %d\n","test",1);
     printf("Using device: %s\nUSE_AESD_CHAR_DEVICE: %d\n",FILENAME,USE_AESD_CHAR_DEVICE);
 
     int socket_descriptor, getaddrinfo_response, bind_response;
@@ -269,12 +250,6 @@ int main(int argc, char* argv[]){
         return 1;
     }
 
-//    file_descriptor = open(FILENAME, O_RDWR | O_TRUNC | O_CREAT | O_APPEND, 0644);
-//    if(file_descriptor==-1){
-//        perror_d("file open");
-//        return 1;
-//    }
-
     pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
     pthread_mutex_init(&mutex, NULL);
 
@@ -306,11 +281,8 @@ int main(int argc, char* argv[]){
             usleep(1000);
         }
     
-        if(!ON){
-//            if(close(td->connection_descriptor)==-1)
-//                perror_d("close connection_descriptor 1");
+        if(!ON)
             break;
-        }
 
         printf_d("Accepted connection from %s:%d\n",inet_ntoa(remote_addr.sin_addr),ntohs(remote_addr.sin_port));
         syslog(LOG_INFO,"Accepted connection from %s\n",inet_ntoa(remote_addr.sin_addr));
@@ -339,7 +311,6 @@ int main(int argc, char* argv[]){
 
 //    pthread_join(time_thread,NULL);
 
-//    close(file_descriptor);
     REMOVE_FILE(FILENAME);
     if(close(socket_descriptor)==-1)
         perror_d("close socket_descriptor");
@@ -347,6 +318,5 @@ int main(int argc, char* argv[]){
     printf_d("closed socket_descriptor\n");
 
     pthread_mutex_destroy(&mutex);
-
     return 0;
 }
