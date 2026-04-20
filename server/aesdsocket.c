@@ -19,7 +19,6 @@
 bool ON=true;
 bool deamon=false;
 bool verbose=false;
-size_t previous_data_length=0;
 int file_descriptor;
 unsigned long thread_id=0;
 time_t ref_time=0;
@@ -75,36 +74,6 @@ void* time_update(void *lock){
     return NULL;
 }
 
-int read_line(char *line,int max_len,off_t offset){
-    off_t llindex=0; //, 
-    off_t loffset=offset;
-    char sign;
-    int ret_code;
-    
-    while(ON){
-        ret_code=pread(file_descriptor,&sign,1,loffset);
-         switch (ret_code){
-            case -1:
-                perror_d("read_line: -1");
-                return -1;
-            case 0:
-                return 0;
-        }
-        line[llindex]=sign;
-        llindex++;
-        loffset++;
-        if(sign == '\n')
-            break;
-        if(llindex+1 > max_len){
-            errno=ENOBUFS;
-            perror_d("buffer exeeded");
-            return -1;
-        }
-    }
-    line[llindex+1]='\0';
-    return llindex;
-}
-
 void* read_send_server_loop(void *thread_param2){
     Thread_Data *td = (Thread_Data *) thread_param2;
     int connection_descriptor=td->connection_descriptor;
@@ -130,63 +99,48 @@ void* read_send_server_loop(void *thread_param2){
                     printf_d("connection closed by remote host\n");
                     break;
             }
-//            close(connection_descriptor);
             break; 
         }
 
         buffer[numbytes]='\0';
 
-//        char *ioseekto=;
         if(strstr(buffer,"AESDCHAR_IOCSEEKTO:")){
-            printf_d("found: %s, ",buffer);
-            int cmd = atoi(strtok(buffer+sizeof("AESDCHAR_IOCSEEKTO:")-1,","));
-            int cmd_offset = atoi(strtok(NULL," "));
-            printf_d("cmd=%d, cmd_offset=%d\n",cmd,cmd_offset);
+            struct aesd_seekto seekto = {
+                atoi(strtok(buffer+sizeof("AESDCHAR_IOCSEEKTO:")-1,",")),
+                atoi(strtok(NULL," "))};
 
-            struct aesd_seekto seekto = {.write_cmd=cmd,.write_cmd_offset=cmd_offset};
-
-                    //write data to file
+            //write data to file
             if(file_des!=-1){
-                printf_d("Setting ioctl cmd=%d cmd_offset=%d\n",cmd,cmd_offset);
-
                 if (pthread_mutex_lock(td->mutex) != 0)
                     perror_d("pthread_mutex_lock");
 
                 offset = ioctl(file_des,AESDCHAR_IOCSEEKTO,&seekto);
-                if(offset<0){
+                if(offset<0)
                     perror_d("Error aesdsocket ioctl:");
-                }
 
                 if(pthread_mutex_unlock(td->mutex)!=0)
                     perror_d("pthread_mutex_lock");
             }
             break;
-            //continue;
         }
-        else
-        {
-            if(previous_data_length>numbytes)
-                printf_d("numbytes=%d < previous_data_len=%d file position moved to 0\n",numbytes,previous_data_length);
 
-            //write data to file
-            if(file_des!=-1){
-                printf_d("received and writing to file: %s|size=%zd\n",buffer,numbytes);
+        //write data to file
+        if(file_des!=-1){
+            printf_d("received and writing to file: %s|size=%zd\n",buffer,numbytes);
 
-                if (pthread_mutex_lock(td->mutex) != 0)
-                    perror_d("pthread_mutex_lock");
+            if (pthread_mutex_lock(td->mutex) != 0)
+                perror_d("pthread_mutex_lock");
 
-                if(write(file_des, buffer,numbytes)<0)
-                    perror_d("writing data to file");
-                previous_data_length=numbytes;
+            if(write(file_des, buffer,numbytes)<0)
+                perror_d("writing data to file");
 
-                if(pthread_mutex_unlock(td->mutex)!=0)
-                    perror_d("pthread_mutex_lock");
-            }
-        
-            if(buffer[numbytes-1]=='\n'){
-                printf_d("remote host finished sending a data\n");
-                break;
-            }
+            if(pthread_mutex_unlock(td->mutex)!=0)
+                perror_d("pthread_mutex_lock");
+        }
+    
+        if(buffer[numbytes-1]=='\n'){
+            printf_d("remote host finished sending a data\n");
+            break;
         }
     }
 
@@ -236,7 +190,7 @@ int main(int argc, char* argv[]){
         }
     }
 
-    printf("Using device: %s\nUSE_AESD_CHAR_DEVICE: %d\n",FILENAME,USE_AESD_CHAR_DEVICE);
+    printf_d("Using device: %s\nUSE_AESD_CHAR_DEVICE: %d\n",FILENAME,USE_AESD_CHAR_DEVICE);
 
     int socket_descriptor, getaddrinfo_response, bind_response;
     struct addrinfo hints, *servinfo;
@@ -287,9 +241,6 @@ int main(int argc, char* argv[]){
 
     pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
     pthread_mutex_init(&mutex, NULL);
-
-//    pthread_t time_thread;
-//    pthread_create(&time_thread, NULL, time_update,&mutex);
 
     SLIST_HEAD(slisthead, Thread_Data) head;
     SLIST_INIT(&head);
@@ -343,8 +294,6 @@ int main(int argc, char* argv[]){
             }
         }
     }
-
-//    pthread_join(time_thread,NULL);
 
     REMOVE_FILE(FILENAME);
     if(close(socket_descriptor)==-1)

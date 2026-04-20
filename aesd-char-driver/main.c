@@ -17,14 +17,14 @@
 #include <linux/types.h>
 #include <linux/cdev.h>
 #include <linux/sched.h>
-#include <linux/fs.h> // file_operations
+#include <linux/fs.h>
 #include "aesdchar.h"
 #include "aesd-circular-buffer.h"
 #include "aesd_ioctl.h"
-int aesd_major =   0; // use dynamic major
+int aesd_major =   0;
 int aesd_minor =   0;
 
-MODULE_AUTHOR("LeszTom"); /** TODO: fill in your name **/
+MODULE_AUTHOR("LeszTom");
 MODULE_LICENSE("Dual BSD/GPL");
 
 struct aesd_dev aesd_device;
@@ -64,7 +64,6 @@ ssize_t aesd_read(struct file *filp, char __user *buf, size_t count, loff_t *f_p
 
     if (mutex_lock_interruptible(&(dev->lock))){
         PDEBUG("Error: aesd_read lock");
-//        pr_err("Błąd dla procesu %d (%s)\n", current->pid, current->comm);
         return -ERESTARTSYS;
     }
 
@@ -86,17 +85,10 @@ ssize_t aesd_read(struct file *filp, char __user *buf, size_t count, loff_t *f_p
         if(entry->buffptr == NULL || dev->eof){
             PDEBUG("Break look. entry_NULL=%d, dev_eof=%d",entry->buffptr == NULL, dev->eof);
             break;
-
         }
-            
 
-        if(lf_pos >= entry->size){
-            lf_pos -=  entry->size;
-//            continue;
-        }else{
-
-            //rest = copy_to_user(buf + read_count, entry->buffptr[lf_pos], entry->size - lf_pos);
-        
+        if(lf_pos < entry->size)
+        {
             rest = copy_to_user(buf + read_count, &entry->buffptr[lf_pos], entry->size - lf_pos);
             PDEBUG("Read, copy_to_user. read_count=%zu, lf_pos=%lld, rest=%zu copied bytes=%zu",read_count,lf_pos,rest, entry->size - lf_pos); 
 
@@ -105,10 +97,11 @@ ssize_t aesd_read(struct file *filp, char __user *buf, size_t count, loff_t *f_p
 
             read_count = read_count + entry->size - lf_pos - rest;
             lf_pos=0;
-        }
+        }else
+            lf_pos -=  entry->size;
+
         dev->cirular_buffer.out_offs++;
         dev->cirular_buffer.out_offs = dev->cirular_buffer.out_offs % (AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED);
-//        *f_pos += read_count;
 
         PDEBUG("Read %s, in_offs = %zu out_offs = %zu",&entry->buffptr[lf_pos],dev->cirular_buffer.in_offs,out_offs);
     }
@@ -199,34 +192,8 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,loff_
         return -ENOMEM;
 }
 
-static loff_t aesd_llseek(struct file *filp, loff_t offset, int whence){
-/*
-    loff_t new_pos;
-
-    switch (whence) {
-        case SEEK_SET: // beginning
-            new_pos = offset;
-            break;
-        case SEEK_CUR: // current
-            new_pos = filp->f_pos + offset;
-            break;
-        case SEEK_END: // end
-            new_pos = DEVICE_MAX_SIZE + offset;
-            break;
-        default: 
-            return -EINVAL; 
-    }
-
-     // Sprawdzenie limitów (pozycja nie może być ujemna ani poza rozmiarem urządzenia)
-    if (new_pos < 0 || new_pos > DEVICE_MAX_SIZE)
-        return -EINVAL;
-
-    // Aktualizacja pozycji w strukturze pliku
-    filp->f_pos = new_pos;
-    
-    return new_pos;
-*/
-    PDEBUG("aesd_llseek 1: file f_fpos=%lld, offset=%zu, whence=%d",filp->f_pos,offset,whence);
+static loff_t aesd_llseek(struct file *filp, loff_t offset, int whence)
+{
     struct aesd_dev *dev = (struct aesd_dev*)filp->private_data;
 
     if (mutex_lock_interruptible(&(dev->lock))){
@@ -239,9 +206,8 @@ static loff_t aesd_llseek(struct file *filp, loff_t offset, int whence){
 
     mutex_unlock(&dev->lock);
 
-    PDEBUG("ases_llseek 2: new_pos=%lld, file f_fpos=%lld, total_size=%zu",new_pos,filp->f_pos,dev->total_size);
+    PDEBUG("ases_llseek: new_pos=%lld, file f_fpos=%lld, total_size=%zu",new_pos,filp->f_pos,dev->total_size);
     return new_pos;
-
 }
 
 static long aesd_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
@@ -262,14 +228,9 @@ static long aesd_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
                     aesd_llseek(filp, retval, SEEK_SET);
             }
             break;
-//        case RD_VALUE:
-//            // Wysyłanie danych do użytkownika
-//            if(copy_to_user((int32_t*)arg, &value, sizeof(value)))
-//                return -EFAULT;
-//            break;
         default:
             PDEBUG("aesd_iocl: -ENOTTY");
-            return -ENOTTY; // Nieobsługiwane polecenie
+            return -ENOTTY;
     }
     return retval;
 }
@@ -277,8 +238,6 @@ static long aesd_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 static loff_t aesd_adjust_file_offset(struct file *filp, uint32_t write_cmd, uint32_t write_cmd_offset)
 {
     struct aesd_dev *dev = (struct aesd_dev*)filp->private_data;
-
-
 
     if (write_cmd >= AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED || dev->cirular_buffer.entry[write_cmd].buffptr== NULL){
         PDEBUG("Error: aesd_adjust_file_offset write_cmd out of range");
@@ -297,12 +256,9 @@ static loff_t aesd_adjust_file_offset(struct file *filp, uint32_t write_cmd, uin
 
     loff_t tmp_pos = 0;
 
-    for(int i=0; i<write_cmd; i++){
+    for(int i=0; i<write_cmd; i++)
         tmp_pos += dev->cirular_buffer.entry[i].size;
-    }
-
     tmp_pos += write_cmd_offset;
-
 
     mutex_unlock(&dev->lock);
     
