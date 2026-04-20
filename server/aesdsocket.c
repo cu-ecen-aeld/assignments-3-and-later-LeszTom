@@ -14,6 +14,7 @@
 #include <time.h>
 #include <stdarg.h>
 #include "aesdsocket.h"
+#include "../aesd-char-driver/aesd_ioctl.h"
 
 bool ON=true;
 bool deamon=false;
@@ -108,13 +109,15 @@ void* read_send_server_loop(void *thread_param2){
     Thread_Data *td = (Thread_Data *) thread_param2;
     int connection_descriptor=td->connection_descriptor;
 
-    ssize_t numbytes=0;  
+    ssize_t numbytes=0;
+    off_t offset=0;
     char *buffer = malloc(sizeof(char)* MAXDATASIZE);
 
     int file_des = open(FILENAME, O_RDWR | O_CREAT | O_APPEND, 0644);
 
     printf_d("receiving data\n");
-    while(ON){
+    while(ON)
+    {
         // reveive data from client 
         numbytes = recv(connection_descriptor, buffer, MAXDATASIZE-1, 0);
 
@@ -127,59 +130,91 @@ void* read_send_server_loop(void *thread_param2){
                     printf_d("connection closed by remote host\n");
                     break;
             }
-            close(connection_descriptor);
+//            close(connection_descriptor);
             break; 
         }
 
         buffer[numbytes]='\0';
 
-        if(previous_data_length>numbytes)
-            printf_d("numbytes=%d < previous_data_len=%d file position moved to 0\n",numbytes,previous_data_length);
+//        char *ioseekto=;
+        if(strstr(buffer,"AESDCHAR_IOCSEEKTO:")){
+            printf_d("found: %s, ",buffer);
+            int cmd = atoi(strtok(buffer+sizeof("AESDCHAR_IOCSEEKTO:")-1,","));
+            int cmd_offset = atoi(strtok(NULL," "));
+            printf_d("cmd=%d, cmd_offset=%d\n",cmd,cmd_offset);
 
-        //write data to file
-        if(file_des!=-1){
-            printf_d("received and writing to file: %s|size=%zd\n",buffer,numbytes);
+            struct aesd_seekto seekto = {.write_cmd=cmd,.write_cmd_offset=cmd_offset};
 
-            if (pthread_mutex_lock(td->mutex) != 0)
-                perror_d("pthread_mutex_lock");
+                    //write data to file
+            if(file_des!=-1){
+                printf_d("Setting ioctl cmd=%d cmd_offset=%d\n",cmd,cmd_offset);
 
-            if(write(file_des, buffer,numbytes)<0)
-                perror_d("writing data to file");
-            previous_data_length=numbytes;
+                if (pthread_mutex_lock(td->mutex) != 0)
+                    perror_d("pthread_mutex_lock");
 
-            if(pthread_mutex_unlock(td->mutex)!=0)
-                perror_d("pthread_mutex_lock");
-        }
-      
-        if(buffer[numbytes-1]=='\n'){
-            printf_d("remote host finished sending a data\n");
+                offset = ioctl(file_des,AESDCHAR_IOCSEEKTO,&seekto);
+                if(offset<0){
+                    perror_d("Error aesdsocket ioctl:");
+                }
+
+                if(pthread_mutex_unlock(td->mutex)!=0)
+                    perror_d("pthread_mutex_lock");
+            }
             break;
+            //continue;
+        }
+        else
+        {
+            if(previous_data_length>numbytes)
+                printf_d("numbytes=%d < previous_data_len=%d file position moved to 0\n",numbytes,previous_data_length);
+
+            //write data to file
+            if(file_des!=-1){
+                printf_d("received and writing to file: %s|size=%zd\n",buffer,numbytes);
+
+                if (pthread_mutex_lock(td->mutex) != 0)
+                    perror_d("pthread_mutex_lock");
+
+                if(write(file_des, buffer,numbytes)<0)
+                    perror_d("writing data to file");
+                previous_data_length=numbytes;
+
+                if(pthread_mutex_unlock(td->mutex)!=0)
+                    perror_d("pthread_mutex_lock");
+            }
+        
+            if(buffer[numbytes-1]=='\n'){
+                printf_d("remote host finished sending a data\n");
+                break;
+            }
         }
     }
 
-    // read entire content from file line by line and send back to the client
-    ssize_t buf_len=0;
-    memset(buffer,0,MAXDATASIZE);
-    lseek(file_des, 0, SEEK_SET);
+    if(offset >= 0){
+        // read entire content from file line by line and send back to the client
+        ssize_t buf_len=0;
+        memset(buffer,0,MAXDATASIZE);
+        lseek(file_des, offset, SEEK_SET);
 
-    while(ON){
-        if (pthread_mutex_lock(td->mutex) != 0)
-            perror_d("pthread_mutex_lock");
+        while(ON){
+            if (pthread_mutex_lock(td->mutex) != 0)
+                perror_d("pthread_mutex_lock");
 
-        buf_len=read(file_des,buffer,MAXDATASIZE);
+            buf_len=read(file_des,buffer,MAXDATASIZE);
 
-        if(pthread_mutex_unlock(td->mutex)!=0)
-            perror_d("pthread_mutex_lock");
+            if(pthread_mutex_unlock(td->mutex)!=0)
+                perror_d("pthread_mutex_lock");
 
-        printf_d("data to sent back: %s|buf_len=%d\n",buffer,buf_len);
+            printf_d("data to sent back: %s|buf_len=%d\n",buffer,buf_len);
 
-        if(buf_len > 0 ){
-            printf_d("sending: %s|len=%d\n",buffer,buf_len);
-            if(send(connection_descriptor, buffer, buf_len, 0) == -1)
-                perror_d("send");
-        }else{
-            printf_d("Read len %zd. No data sent\n",buf_len);
-            break;
+            if(buf_len > 0 ){
+                printf_d("sending: %s|len=%d\n",buffer,buf_len);
+                if(send(connection_descriptor, buffer, buf_len, 0) == -1)
+                    perror_d("send");
+            }else{
+                printf_d("Read len %zd. No data sent\n",buf_len);
+                break;
+            }
         }
     }
 

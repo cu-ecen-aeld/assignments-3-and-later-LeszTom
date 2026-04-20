@@ -34,6 +34,7 @@ struct aesd_dev
     struct cdev cdev;
 };
 
-void aesd_device_status(struct aesd_dev *device);
+//void aesd_device_status(struct aesd_dev *device);
+static loff_t aesd_adjust_file_offset(struct file *filp, uint32_t write_cmd, uint32_t write_cmd_offset);
 
 #endif /* AESD_CHAR_DRIVER_AESDCHAR_H_ */

@@ -64,7 +64,7 @@ ssize_t aesd_read(struct file *filp, char __user *buf, size_t count, loff_t *f_p
 
     if (mutex_lock_interruptible(&(dev->lock))){
         PDEBUG("Error: aesd_read lock");
-        pr_err("Błąd dla procesu %d (%s)\n", current->pid, current->comm);
+//        pr_err("Błąd dla procesu %d (%s)\n", current->pid, current->comm);
         return -ERESTARTSYS;
     }
 
@@ -226,12 +226,11 @@ static loff_t aesd_llseek(struct file *filp, loff_t offset, int whence){
     
     return new_pos;
 */
-//    PDEBUG("llseek 1: file f_fpos=%lld, offset=%zu, whence=%d",filp->f_pos,offset,whence);
+    PDEBUG("aesd_llseek 1: file f_fpos=%lld, offset=%zu, whence=%d",filp->f_pos,offset,whence);
     struct aesd_dev *dev = (struct aesd_dev*)filp->private_data;
 
     if (mutex_lock_interruptible(&(dev->lock))){
-        PDEBUG("Error: aesd_read lock");
-        pr_err("Błąd dla procesu %d (%s)\n", current->pid, current->comm);
+        PDEBUG("Error: aesd_llseek lock");
         return -ERESTARTSYS;
     }
 
@@ -240,18 +239,28 @@ static loff_t aesd_llseek(struct file *filp, loff_t offset, int whence){
 
     mutex_unlock(&dev->lock);
 
-//    PDEBUG("llseek 2: new_pos=%lld, file f_fpos=%lld, total_size=%zu",new_pos,filp->f_pos,dev->total_size);
+    PDEBUG("ases_llseek 2: new_pos=%lld, file f_fpos=%lld, total_size=%zu",new_pos,filp->f_pos,dev->total_size);
     return new_pos;
 
 }
 
-/*
-static long aesd_ioctl(struct file *file, unsigned int cmd, unsigned long arg) {
+static long aesd_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+{
+    off_t retval=0;
+    PDEBUG("aesd_iocl: file f_fpos=%lld, cmd=%u",filp->f_pos,cmd);
     switch(cmd) {
         case AESDCHAR_IOCSEEKTO:
-            // Pobieranie danych od użytkownika
-            if(copy_from_user(&value, (int32_t*)arg, sizeof(value)))
+            struct aesd_seekto seekto;
+            if(copy_from_user(&seekto, (const void __user *)arg, sizeof(seekto))){
+                PDEBUG("aesd_iocl: -EFAULT");
                 return -EFAULT;
+            }else{
+                PDEBUG("aesd_ioct: write_cmd=%u, write_cmd_offset=%u",seekto.write_cmd,seekto.write_cmd_offset);
+                retval = aesd_adjust_file_offset(filp,seekto.write_cmd,seekto.write_cmd_offset);
+                PDEBUG("aesd_iocl: offset set to %lld",retval);
+                if(retval > 0)        
+                    aesd_llseek(filp, retval, SEEK_SET);
+            }
             break;
 //        case RD_VALUE:
 //            // Wysyłanie danych do użytkownika
@@ -259,17 +268,53 @@ static long aesd_ioctl(struct file *file, unsigned int cmd, unsigned long arg) {
 //                return -EFAULT;
 //            break;
         default:
+            PDEBUG("aesd_iocl: -ENOTTY");
             return -ENOTTY; // Nieobsługiwane polecenie
     }
-    return 0;
+    return retval;
 }
-*/
+
+static loff_t aesd_adjust_file_offset(struct file *filp, uint32_t write_cmd, uint32_t write_cmd_offset)
+{
+    struct aesd_dev *dev = (struct aesd_dev*)filp->private_data;
+
+
+
+    if (write_cmd >= AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED || dev->cirular_buffer.entry[write_cmd].buffptr== NULL){
+        PDEBUG("Error: aesd_adjust_file_offset write_cmd out of range");
+        return -ERESTARTSYS;
+    }
+
+    if (write_cmd_offset >= dev->cirular_buffer.entry[write_cmd].size){
+        PDEBUG("Error: aesd_adjust_file_offset write_cmd_offset out of range");
+        return -ERESTARTSYS;
+    }
+
+    if (mutex_lock_interruptible(&(dev->lock))){
+        PDEBUG("Error: aesd_adjust_file_offset lock");
+        return -ERESTARTSYS;
+    }
+
+    loff_t tmp_pos = 0;
+
+    for(int i=0; i<write_cmd; i++){
+        tmp_pos += dev->cirular_buffer.entry[i].size;
+    }
+
+    tmp_pos += write_cmd_offset;
+
+
+    mutex_unlock(&dev->lock);
+    
+    return tmp_pos;
+}
+
 struct file_operations aesd_fops = {
     .owner =    THIS_MODULE,
     .read =     aesd_read,
     .write =    aesd_write,
     .llseek =   aesd_llseek,
-//    .unlocked_ioctl = aesd_ioctl,
+    .unlocked_ioctl = aesd_ioctl,
     .open =     aesd_open,
     .release =  aesd_release,
 };
