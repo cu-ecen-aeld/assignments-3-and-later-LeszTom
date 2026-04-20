@@ -8,7 +8,7 @@
 #ifndef AESD_CHAR_DRIVER_AESDCHAR_H_
 #define AESD_CHAR_DRIVER_AESDCHAR_H_
 
-//#define AESD_DEBUG 1  //Remove comment on this line to enable debug
+#define AESD_DEBUG 1  //Remove comment on this line to enable debug
 
 #undef PDEBUG             /* undef it, just in case */
 #ifdef AESD_DEBUG
@@ -28,6 +28,7 @@
 struct aesd_dev
 {
     struct aesd_circular_buffer cirular_buffer;
+    size_t total_size;
     bool eof;
     struct mutex lock;
     struct cdev cdev;

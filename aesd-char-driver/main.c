@@ -20,6 +20,7 @@
 #include <linux/fs.h> // file_operations
 #include "aesdchar.h"
 #include "aesd-circular-buffer.h"
+#include "aesd_ioctl.h"
 int aesd_major =   0; // use dynamic major
 int aesd_minor =   0;
 
@@ -47,15 +48,19 @@ int aesd_release(struct inode *inode, struct file *filp)
 
 ssize_t aesd_read(struct file *filp, char __user *buf, size_t count, loff_t *f_pos)
 {
+    PDEBUG("Read file f_fpos=%lld, function f_pos=%lld, count=%zu",filp->f_pos,*f_pos,count);
     ssize_t retval = 0;
     ssize_t rest = 0;
     ssize_t read_count = 0;
+    loff_t lf_pos = *f_pos;
     struct aesd_buffer_entry* entry;
 
     struct aesd_dev *dev = (struct aesd_dev*)filp->private_data;
 
-    if(dev->eof)
+    if(dev->eof){
+        dev->eof=false;
         return 0;
+    }
 
     if (mutex_lock_interruptible(&(dev->lock))){
         PDEBUG("Error: aesd_read lock");
@@ -73,25 +78,47 @@ ssize_t aesd_read(struct file *filp, char __user *buf, size_t count, loff_t *f_p
     uint8_t out_offs=dev->cirular_buffer.out_offs;
 
     for(int i=0; i<iterations; i++){
+
+        PDEBUG("Iteration i=%d, in_offs=%zu, out_offs=%zu",i,dev->cirular_buffer.in_offs,dev->cirular_buffer.out_offs);
+
         entry = &(dev->cirular_buffer.entry[dev->cirular_buffer.out_offs]);
 
-        if(entry->buffptr == NULL || dev->eof)
+        if(entry->buffptr == NULL || dev->eof){
+            PDEBUG("Break look. entry_NULL=%d, dev_eof=%d",entry->buffptr == NULL, dev->eof);
             break;
 
-        rest = copy_to_user(buf + read_count, entry->buffptr, entry->size);
-
-        if (rest) {
-            PDEBUG("Not all date read. read %zu bytes, expected %zu",entry->size-rest,count);
         }
+            
 
-        read_count = read_count + entry->size - rest;
+        if(lf_pos >= entry->size){
+            lf_pos -=  entry->size;
+//            continue;
+        }else{
+
+            //rest = copy_to_user(buf + read_count, entry->buffptr[lf_pos], entry->size - lf_pos);
+        
+            rest = copy_to_user(buf + read_count, &entry->buffptr[lf_pos], entry->size - lf_pos);
+            PDEBUG("Read, copy_to_user. read_count=%zu, lf_pos=%lld, rest=%zu copied bytes=%zu",read_count,lf_pos,rest, entry->size - lf_pos); 
+
+            if (rest)
+                PDEBUG("Not all date read. read %zu bytes, expected %zu",entry->size - lf_pos - rest,count);
+
+            read_count = read_count + entry->size - lf_pos - rest;
+            lf_pos=0;
+        }
         dev->cirular_buffer.out_offs++;
         dev->cirular_buffer.out_offs = dev->cirular_buffer.out_offs % (AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED);
-        PDEBUG("Read %s, in_offs = %zu out_offs = %zu",entry->buffptr,dev->cirular_buffer.in_offs,out_offs);
+//        *f_pos += read_count;
+
+        PDEBUG("Read %s, in_offs = %zu out_offs = %zu",&entry->buffptr[lf_pos],dev->cirular_buffer.in_offs,out_offs);
     }
 
     dev->eof=true;
     retval = read_count;
+    *f_pos += read_count;
+    if (*f_pos >= dev->total_size){
+        *f_pos -=  dev->total_size;
+    }
     mutex_unlock(&dev->lock);
 
     return read_count;
@@ -105,6 +132,7 @@ ssize_t aesd_read(struct file *filp, char __user *buf, size_t count, loff_t *f_p
 
 ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,loff_t *f_pos)
 {
+    PDEBUG("Write file f_fpos=%lld, function f_pos=%zu, count=%zu",filp->f_pos,*f_pos,count);
     struct aesd_dev *dev;
     dev = (struct aesd_dev*)filp->private_data;
 
@@ -117,6 +145,7 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,loff_
     struct aesd_buffer_entry* entry = &(dev->cirular_buffer.entry[dev->cirular_buffer.in_offs]);
 
     if(entry->buffptr != NULL && entry->buffptr[entry->size-1] == '\n'){
+        dev->total_size -= entry->size;
         kfree(entry->buffptr);
         entry->buffptr = NULL;
         entry->size=0;
@@ -145,6 +174,8 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,loff_
     rest = copy_from_user(entry->buffptr+entry->size, buf, count);
 
     entry->size = entry->size + count - rest;
+    *f_pos = *f_pos + entry->size;
+    dev->total_size += entry->size; 
     if(count - rest > 0)
         dev->eof=false;
 
@@ -168,10 +199,77 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,loff_
         return -ENOMEM;
 }
 
+static loff_t aesd_llseek(struct file *filp, loff_t offset, int whence){
+/*
+    loff_t new_pos;
+
+    switch (whence) {
+        case SEEK_SET: // beginning
+            new_pos = offset;
+            break;
+        case SEEK_CUR: // current
+            new_pos = filp->f_pos + offset;
+            break;
+        case SEEK_END: // end
+            new_pos = DEVICE_MAX_SIZE + offset;
+            break;
+        default: 
+            return -EINVAL; 
+    }
+
+     // Sprawdzenie limitów (pozycja nie może być ujemna ani poza rozmiarem urządzenia)
+    if (new_pos < 0 || new_pos > DEVICE_MAX_SIZE)
+        return -EINVAL;
+
+    // Aktualizacja pozycji w strukturze pliku
+    filp->f_pos = new_pos;
+    
+    return new_pos;
+*/
+//    PDEBUG("llseek 1: file f_fpos=%lld, offset=%zu, whence=%d",filp->f_pos,offset,whence);
+    struct aesd_dev *dev = (struct aesd_dev*)filp->private_data;
+
+    if (mutex_lock_interruptible(&(dev->lock))){
+        PDEBUG("Error: aesd_read lock");
+        pr_err("Błąd dla procesu %d (%s)\n", current->pid, current->comm);
+        return -ERESTARTSYS;
+    }
+
+    loff_t new_pos = fixed_size_llseek(filp, offset, whence, dev->total_size);
+    dev->cirular_buffer.out_offs=0;
+
+    mutex_unlock(&dev->lock);
+
+//    PDEBUG("llseek 2: new_pos=%lld, file f_fpos=%lld, total_size=%zu",new_pos,filp->f_pos,dev->total_size);
+    return new_pos;
+
+}
+
+/*
+static long aesd_ioctl(struct file *file, unsigned int cmd, unsigned long arg) {
+    switch(cmd) {
+        case AESDCHAR_IOCSEEKTO:
+            // Pobieranie danych od użytkownika
+            if(copy_from_user(&value, (int32_t*)arg, sizeof(value)))
+                return -EFAULT;
+            break;
+//        case RD_VALUE:
+//            // Wysyłanie danych do użytkownika
+//            if(copy_to_user((int32_t*)arg, &value, sizeof(value)))
+//                return -EFAULT;
+//            break;
+        default:
+            return -ENOTTY; // Nieobsługiwane polecenie
+    }
+    return 0;
+}
+*/
 struct file_operations aesd_fops = {
     .owner =    THIS_MODULE,
     .read =     aesd_read,
     .write =    aesd_write,
+    .llseek =   aesd_llseek,
+//    .unlocked_ioctl = aesd_ioctl,
     .open =     aesd_open,
     .release =  aesd_release,
 };
